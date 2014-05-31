@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-
+using Newtonsoft.Json;
 namespace PusherServer
 {
     /// <summary>
@@ -47,6 +47,12 @@ namespace PusherServer
         /// <param name="options">Additional options to be used when triggering the event. See <see cref="ITriggerOptions"/>.</param>
         /// <returns>The result of the call to the REST API</returns>
         ITriggerResult Trigger(string[] channelNames, string eventName, object data, ITriggerOptions options);
+
+        #region Custom triggers
+        ITriggerResult Trigger(string channelName, string eventName, object data, JsonSerializerSettings settings);
+        ITriggerResult Trigger(string channelName, string eventName, object data, JsonSerializerSettings settings, ITriggerOptions options);
+        ITriggerResult Trigger(string[] channelName, string eventName, object data, JsonSerializerSettings settings, ITriggerOptions options);
+        #endregion
 
         //void TriggerAsync(string channelName, string eventName object data, Action<IRestResponse, RestRequestAsyncHandle> callback);
 

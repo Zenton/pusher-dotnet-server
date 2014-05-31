@@ -4,6 +4,7 @@ using RestSharp;
 using RestSharp.Serializers;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using Newtonsoft.Json;
 
 namespace PusherServer
 {
@@ -137,6 +138,36 @@ namespace PusherServer
             TriggerResult result = new TriggerResult(response);
             return result;
         }
+        #region Custom triggers
+        public ITriggerResult Trigger(string channelName, string eventName, object data, JsonSerializerSettings settings)
+        {
+            return Trigger(new string[] { channelName }, eventName, data, settings, new TriggerOptions());
+        }
+        public ITriggerResult Trigger(string channelName, string eventName, object data, JsonSerializerSettings settings, ITriggerOptions options)
+        {
+            return Trigger(new string[] { channelName }, eventName, data, settings, options);
+        }
+        public ITriggerResult Trigger(string[] channelNames, string eventName, object data, JsonSerializerSettings settings, ITriggerOptions options)
+        {
+            TriggerBody bodyData = new TriggerBody()
+            {
+                name = eventName,
+                data = JsonConvert.SerializeObject(data, settings),
+                channels = channelNames
+            };
+
+            if (!string.IsNullOrEmpty(options.SocketId))
+            {
+                bodyData.socket_id = options.SocketId;
+            }
+
+            IRestResponse response = ExecuteTrigger(channelNames, eventName, bodyData);
+
+            TriggerResult result = new TriggerResult(response);
+
+            return result;
+    }
+        #endregion
         #endregion
 
         #region Authentication
@@ -206,8 +237,8 @@ namespace PusherServer
             queryParams.Add("auth_version", "1.0");
 
             if (requestBody != null)
-            {   
-                JsonSerializer serializer = new JsonSerializer();
+            {
+                RestSharp.Serializers.JsonSerializer serializer = new RestSharp.Serializers.JsonSerializer(); // we need RestSharp.Serializers. in front of JsonSerializer, otherwise it conflicts with Newtonsoft.Json.JsonSerializer.
                 var bodyDataJson = serializer.Serialize(requestBody);
                 var bodyMD5 = CryptoHelper.GetMd5Hash(bodyDataJson);
                 queryParams.Add("body_md5", bodyMD5);
